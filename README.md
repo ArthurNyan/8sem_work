@@ -78,6 +78,55 @@ npm run export -- --course=6086 --output ./tmp/export
 npm run export -- --course=6086 --storage ./playwright/.auth/herzen.json
 ```
 
+## Работа с PDF
+
+Проект умеет конвертировать Markdown в PDF и автоматически рендерить `mermaid`-блоки как `SVG` внутри итогового документа.
+
+### Один файл
+
+```bash
+npm run md:pdf -- --input ./student-project/README.md
+```
+
+С указанием выходного файла:
+
+```bash
+npm run md:pdf -- \
+  --input ./student-project/courses/16582-it-recruitment/lab-4-profstandard-mindmaps.md \
+  --output ./tmp/lab-4-profstandard-mindmaps.pdf
+```
+
+### Вся папка
+
+```bash
+npm run md:pdf -- --dir ./student-project --out-dir ./pdfs
+```
+
+Команда:
+
+- рекурсивно находит все `.md` внутри папки;
+- создает `.pdf` с той же вложенной структурой;
+- добавляет подпись внизу документа;
+- рендерит `mermaid`-диаграммы прямо в PDF.
+
+### Полезные параметры
+
+```bash
+npm run md:pdf -- --dir ./student-project --out-dir ./pdfs --format A4
+npm run md:pdf -- --dir ./student-project --out-dir ./pdfs --signature "Выполнил: Нахатакян Артур"
+npm run md:pdf -- --dir ./student-project --out-dir ./pdfs --mermaid-theme neutral
+```
+
+### Отдельный рендер Mermaid
+
+Если нужно получить сами диаграммы отдельно в `SVG` или `PNG`, можно использовать пакетный рендер:
+
+```bash
+npm run mermaid:render -- --dir ./student-project --out-dir ./diagrams
+```
+
+По умолчанию он сохраняет `SVG` и повторяет структуру исходных Markdown-файлов.
+
 ## Ограничения
 
 - если Moodle запросит логин снова, нужно пересоздать storage state через `npm run auth`
