@@ -1,0 +1,20 @@
+{
+  "name": "moodle-exporter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local Moodle exporter for collecting course materials from an authenticated browser session.",
+  "scripts": {
+    "auth": "node src/auth.js",
+    "export": "node src/cli.js",
+    "analyze": "node src/analyze.js",
+    "md:pdf": "node src/md-to-pdf.js",
+    "mermaid:render": "node src/render-mermaid.js",
+    "check": "node --check src/auth.js && node --check src/cli.js && node --check src/exporter.js && node --check src/analyze.js && node --check src/md-to-pdf.js && node --check src/render-mermaid.js && node --check src/utils.js"
+  },
+  "dependencies": {
+    "@mermaid-js/mermaid-cli": "^11.12.0",
+    "marked": "^17.0.4",
+    "playwright": "^1.54.2"
+  }
+}

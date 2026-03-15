@@ -1,0 +1,44 @@
+[
+  {
+    "courseId": 6086,
+    "courseTitle": "6086",
+    "sections": 22,
+    "activities": 113,
+    "assignments": 29
+  },
+  {
+    "courseId": 6087,
+    "courseTitle": "6087",
+    "sections": 23,
+    "activities": 105,
+    "assignments": 40
+  },
+  {
+    "courseId": 16582,
+    "courseTitle": "16582",
+    "sections": 5,
+    "activities": 12,
+    "assignments": 6
+  },
+  {
+    "courseId": 16583,
+    "courseTitle": "16583",
+    "sections": 6,
+    "activities": 9,
+    "assignments": 4
+  },
+  {
+    "courseId": 31896,
+    "courseTitle": "31896",
+    "sections": 8,
+    "activities": 62,
+    "assignments": 14
+  },
+  {
+    "courseId": 36120,
+    "courseTitle": "36120",
+    "sections": 3,
+    "activities": 15,
+    "assignments": 2
+  }
+]
