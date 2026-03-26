@@ -1,0 +1,57 @@
+@startuml state
+
+title Диаграмма состояний\nЖизненный цикл контентной единицы (Article / Project / Vacancy)
+
+skinparam stateBorderThickness 2
+skinparam stateArrowThickness 2
+
+[*] --> Draft : Создать запись\n(POST /articles)
+
+state Draft {
+    Draft : publishedAt = null
+    Draft : Видна только\nв Strapi Admin UI
+    Draft : Недоступна через\nPublic REST API
+}
+
+state Published {
+    Published : publishedAt = <timestamp>
+    Published : Доступна через\nREST API
+    Published : Включается в\nстатическую сборку\nAstro (astro build)
+}
+
+state Deleted {
+    Deleted : Запись удалена из БД
+    Deleted : Не возвращается\nни одним API-эндпоинтом
+}
+
+Draft --> Draft : Редактировать\n(PUT /articles/:id)
+
+Draft --> Published : Опубликовать\n(PUT publishedAt = now())
+note on link
+    Контент-менеджер нажимает
+    "Publish" в Strapi Admin UI
+end note
+
+Published --> Draft : Снять с публикации\n(PUT publishedAt = null)
+note on link
+    Контент-менеджер нажимает
+    "Unpublish" в Strapi Admin UI.
+    Страница исчезнет с сайта
+    после следующей сборки.
+end note
+
+Published --> Published : Редактировать\n(PUT /articles/:id)
+note on link
+    Изменения появятся
+    на сайте только после
+    следующей сборки
+end note
+
+Draft --> Deleted : Удалить\n(DELETE /articles/:id)
+Published --> Deleted : Удалить\n(DELETE /articles/:id)
+
+Deleted --> [*]
+
+note "Strapi поддерживает\nDraft & Publish\nдля Article, Project, Vacancy.\n\nПереход Draft ↔ Published\nустанавливает / сбрасывает\nполе publishedAt." as N1
+
+@enduml

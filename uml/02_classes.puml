@@ -1,0 +1,166 @@
+@startuml classes
+
+title Диаграмма классов\nCMS-шаблон на базе Strapi и Astro
+
+skinparam classAttributeIconSize 0
+skinparam groupInheritance 2
+
+package "Strapi Backend" {
+
+    enum VacancyFormat {
+        remote
+        hybrid
+        office
+    }
+
+    abstract class StrapiBaseEntity {
+        +id: number
+        +documentId: string
+        +createdAt: Date
+        +updatedAt: Date
+        +publishedAt: Date | null
+    }
+
+    abstract class LocalizedEntity {
+        +locale: string
+        +localizations: LocalizedEntity[]
+    }
+
+    class Article {
+        +name: string
+        +description: string
+        +slug: string
+        +date: Date | null
+        +cover: UploadFile
+        +content: string | null
+    }
+
+    class Author {
+        +firstName: string
+        +lastName: string
+    }
+
+    class Project {
+        +name: string
+        +description: string
+        +slug: string
+        +cover: UploadFile
+        +logo: UploadFile | null
+        +date: Date | null
+        +content: string | null
+    }
+
+    class Vacancy {
+        +title: string
+        +description: string | null
+        +salary: string | null
+        +location: string | null
+        +active: boolean
+        +format: VacancyFormat
+        +about: string | null
+    }
+
+    class Global {
+        +companyName: string
+        +description: string
+        +logo: UploadFile
+    }
+
+    class HomePage {
+        +Title: string | null
+        +description: string
+    }
+
+    class UploadFile {
+        +name: string
+        +url: string
+        +mime: string
+        +size: number
+        +width: number | null
+        +height: number | null
+        +alternativeText: string | null
+    }
+
+    StrapiBaseEntity <|-- Article
+    StrapiBaseEntity <|-- Author
+    StrapiBaseEntity <|-- Project
+    StrapiBaseEntity <|-- Vacancy
+    StrapiBaseEntity <|-- Global
+    StrapiBaseEntity <|-- HomePage
+
+    LocalizedEntity <|-- Article
+    LocalizedEntity <|-- Author
+    LocalizedEntity <|-- Project
+    LocalizedEntity <|-- Global
+    LocalizedEntity <|-- HomePage
+
+    Article "0..*" <--> "0..*" Author : authors / articles\n<<manyToMany>>
+    Article "1" --> "1" UploadFile : cover
+    Project "1" --> "1" UploadFile : cover
+    Project "1" --> "0..1" UploadFile : logo
+    Global "1" --> "1" UploadFile : logo
+
+    Vacancy --> VacancyFormat : format
+}
+
+package "Astro Frontend" {
+
+    class StrapiApiClient {
+        -baseURL: string
+        +getArticles(query?): Article[]
+        +getArticlesId(documentId): Article
+        +getProjects(query?): Project[]
+        +getProjectsId(documentId): Project
+        +getVacancies(query?): Vacancy[]
+    }
+
+    class ArticlePage {
+        -article: Article
+        +render(): HTML
+    }
+
+    class ProjectPage {
+        -project: Project
+        +render(): HTML
+    }
+
+    class VacanciesPage {
+        -vacancies: Vacancy[]
+        +render(): HTML
+    }
+
+    class ArticleCard {
+        -article: Article
+        -baseUrl: string
+        +render(): HTML
+    }
+
+    class ProjectCard {
+        -project: Project
+        -baseUrl: string
+        +render(): HTML
+    }
+
+    class VacancyList {
+        -vacancies: Vacancy[]
+        +render(): HTML
+    }
+
+    StrapiApiClient ..> Article : returns
+    StrapiApiClient ..> Project : returns
+    StrapiApiClient ..> Vacancy : returns
+
+    ArticlePage --> StrapiApiClient : uses
+    ProjectPage --> StrapiApiClient : uses
+    VacanciesPage --> StrapiApiClient : uses
+
+    ArticlePage --> ArticleCard : renders
+    ProjectPage --> ProjectCard : renders
+    VacanciesPage --> VacancyList : renders
+
+    ArticleCard --> Article : displays
+    ProjectCard --> Project : displays
+    VacancyList --> Vacancy : displays
+}
+
+@enduml

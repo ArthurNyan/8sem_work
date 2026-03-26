@@ -1,0 +1,74 @@
+@startuml use_case
+
+title Диаграмма вариантов использования\nCMS-шаблон на базе Strapi и Astro
+
+left to right direction
+
+actor "Администратор /\nРазработчик" as Admin
+actor "Контент-менеджер" as CM
+actor "Посетитель" as Visitor
+
+rectangle "Strapi Admin UI" {
+    usecase "Управление ролями\nи правами доступа" as UC_Roles
+    usecase "Настройка плагинов\nсистемы" as UC_Plugins
+    usecase "Просмотр API-документации\n(Swagger / OpenAPI)" as UC_Docs
+    usecase "Управление\nпользователями" as UC_Users
+
+    usecase "Создание / редактирование\nстатьи (Article)" as UC_Article
+    usecase "Создание / редактирование\nпроекта (Project)" as UC_Project
+    usecase "Создание / редактирование\nвакансии (Vacancy)" as UC_Vacancy
+    usecase "Управление\nавторами (Author)" as UC_Author
+    usecase "Загрузка медиафайлов\n(Media Library)" as UC_Media
+    usecase "Публикация контента\n(Draft → Published)" as UC_Publish
+    usecase "Снятие с публикации\n(Published → Draft)" as UC_Unpublish
+}
+
+rectangle "Astro Frontend (Сайт)" {
+    usecase "Просмотр\nсписка статей" as UC_Articles
+    usecase "Чтение статьи" as UC_ArticleDetail
+    usecase "Просмотр\nсписка проектов" as UC_Projects
+    usecase "Просмотр\nдетальной страницы проекта" as UC_ProjectDetail
+    usecase "Просмотр\nсписка вакансий" as UC_Vacancies
+}
+
+rectangle "Сборка (Build)" {
+    usecase "Генерация TypeScript\nAPI-клиента из OpenAPI" as UC_GenAPI
+    usecase "Сборка статического\nсайта (astro build)" as UC_Build
+}
+
+' Администратор
+Admin --> UC_Roles
+Admin --> UC_Plugins
+Admin --> UC_Docs
+Admin --> UC_Users
+Admin --> UC_GenAPI
+Admin --> UC_Build
+
+' Контент-менеджер
+CM --> UC_Article
+CM --> UC_Project
+CM --> UC_Vacancy
+CM --> UC_Author
+CM --> UC_Media
+CM --> UC_Publish
+CM --> UC_Unpublish
+
+' Публикация включает загрузку медиа
+UC_Publish ..> UC_Media : <<include>>
+
+' Посетитель
+Visitor --> UC_Articles
+Visitor --> UC_ArticleDetail
+Visitor --> UC_Projects
+Visitor --> UC_ProjectDetail
+Visitor --> UC_Vacancies
+
+UC_Articles ..> UC_ArticleDetail : <<extend>>
+UC_Projects ..> UC_ProjectDetail : <<extend>>
+
+' Администратор также может управлять контентом
+Admin --> UC_Article
+Admin --> UC_Project
+Admin --> UC_Vacancy
+
+@enduml

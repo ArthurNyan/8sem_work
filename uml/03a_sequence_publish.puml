@@ -1,0 +1,76 @@
+@startuml sequence_publish
+
+title Диаграмма последовательности\nПубликация контента контент-менеджером
+
+skinparam sequenceArrowThickness 2
+skinparam sequenceParticipantBorderThickness 2
+
+actor "Контент-менеджер" as CM
+participant "Strapi Admin UI\n:1337/admin" as AdminUI
+participant "Strapi REST API\n:1337/api" as API
+database "SQLite DB" as DB
+
+== Аутентификация ==
+
+CM -> AdminUI : Открыть /admin
+AdminUI -> CM : Отобразить форму входа
+CM -> AdminUI : Ввести email и пароль
+AdminUI -> API : POST /auth/local\n{ identifier, password }
+API -> DB : SELECT user WHERE email = ?
+DB --> API : User record
+API --> AdminUI : JWT токен
+AdminUI --> CM : Открыть панель управления
+
+== Создание черновика ==
+
+CM -> AdminUI : Выбрать Content Manager → Article → Create
+AdminUI --> CM : Отобразить форму создания статьи
+CM -> AdminUI : Заполнить поля:\nname, description, slug, date, content
+CM -> AdminUI : Нажать "Save"
+AdminUI -> API : POST /articles\n{ name, description, slug, date, content }\nAuthorization: Bearer <JWT>
+API -> DB : INSERT INTO articles\n(name, description, slug, date, content,\npublishedAt=NULL, locale='en')
+DB --> API : { id, documentId }
+API --> AdminUI : 201 Created\n{ data: Article (Draft) }
+AdminUI --> CM : Статья создана как черновик
+
+== Загрузка медиафайла ==
+
+CM -> AdminUI : Открыть поле "Cover" → Upload
+AdminUI -> API : POST /upload\nContent-Type: multipart/form-data\n[image file]
+API -> DB : INSERT INTO upload_files\n(name, url, mime, size, ...)
+DB --> API : { id, url }
+API --> AdminUI : 200 OK\n[{ id, url, mime }]
+AdminUI --> CM : Превью обложки отображено
+
+CM -> AdminUI : Нажать "Save" (с cover)
+AdminUI -> API : PUT /articles/:documentId\n{ cover: { id: fileId } }
+API -> DB : UPDATE articles SET cover_id = ?
+DB --> API : Updated record
+API --> AdminUI : 200 OK
+AdminUI --> CM : Обложка сохранена
+
+== Связывание автора ==
+
+CM -> AdminUI : Открыть поле "Authors" → добавить автора
+AdminUI -> API : GET /authors\n?fields[0]=firstName&fields[1]=lastName
+API -> DB : SELECT * FROM authors WHERE publishedAt IS NOT NULL
+DB --> API : [ Author, ... ]
+API --> AdminUI : 200 OK\n[{ id, documentId, firstName, lastName }]
+AdminUI --> CM : Список авторов для выбора
+CM -> AdminUI : Выбрать автора и сохранить
+AdminUI -> API : PUT /articles/:documentId\n{ authors: [{ id: authorId }] }
+API -> DB : INSERT INTO articles_authors_lnk
+DB --> API : Updated
+API --> AdminUI : 200 OK
+AdminUI --> CM : Автор привязан
+
+== Публикация ==
+
+CM -> AdminUI : Нажать "Publish"
+AdminUI -> API : PUT /articles/:documentId\n{ publishedAt: "2024-01-01T10:00:00Z" }
+API -> DB : UPDATE articles\nSET publishedAt = '2024-01-01T10:00:00Z'\nWHERE documentId = ?
+DB --> API : Updated record (Published)
+API --> AdminUI : 200 OK\n{ data: Article (publishedAt set) }
+AdminUI --> CM : Статус изменён на "Published"\n\nКонтент появится на сайте\nпосле следующей сборки (astro build)
+
+@enduml

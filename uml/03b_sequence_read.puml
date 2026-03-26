@@ -1,0 +1,87 @@
+@startuml sequence_read
+
+title Диаграмма последовательности\nЧтение страницы посетителем (SSG)
+
+skinparam sequenceArrowThickness 2
+skinparam sequenceParticipantBorderThickness 2
+
+participant "astro build\n(CI / локально)" as Build
+participant "Strapi REST API\n:1337/api" as API
+database "SQLite DB" as DB
+collections "Статические файлы\n(dist/)" as StaticFiles
+actor "Посетитель" as Visitor
+participant "Браузер" as Browser
+
+== Build-time: Генерация статических страниц ==
+
+Build -> Build : Запуск astro build
+
+group Генерация /articles/[slug]
+    Build -> API : GET /articles\n?populate=*
+    API -> DB : SELECT * FROM articles\nWHERE publishedAt IS NOT NULL
+    DB --> API : [ Article, ... ]
+    API --> Build : 200 OK\n[ { documentId, slug, name, ... }, ... ]
+    Build -> Build : getStaticPaths()\n→ params = [{ slug }, ...]
+
+    loop для каждого documentId
+        Build -> API : GET /articles/:documentId\n?populate=*
+        API -> DB : SELECT article, authors, cover\nWHERE documentId = ?
+        DB --> API : Article + Relations
+        API --> Build : 200 OK\n{ data: Article }
+        Build -> Build : Рендер ArticlePage → HTML
+        Build -> StaticFiles : Записать /articles/:slug/index.html
+    end
+end
+
+group Генерация /projects/[slug]
+    Build -> API : GET /projects\n?populate=*
+    API -> DB : SELECT * FROM projects\nWHERE publishedAt IS NOT NULL
+    DB --> API : [ Project, ... ]
+    API --> Build : 200 OK\n[ { documentId, slug, name, ... }, ... ]
+
+    loop для каждого documentId
+        Build -> API : GET /projects/:documentId\n?populate=*
+        API -> DB : SELECT project, cover, logo\nWHERE documentId = ?
+        DB --> API : Project
+        API --> Build : 200 OK\n{ data: Project }
+        Build -> Build : Рендер ProjectPage → HTML
+        Build -> StaticFiles : Записать /projects/:slug/index.html
+    end
+end
+
+group Генерация /vacancies
+    Build -> API : GET /vacancies\n?populate=*
+    API -> DB : SELECT * FROM vacancies\nWHERE publishedAt IS NOT NULL
+    DB --> API : [ Vacancy, ... ]
+    API --> Build : 200 OK\n[ { documentId, title, active, format, ... }, ... ]
+    Build -> Build : Фильтр: vacancy.active === true
+    Build -> Build : Рендер VacanciesPage → HTML
+    Build -> StaticFiles : Записать /vacancies/index.html
+end
+
+Build -> StaticFiles : Сборка завершена\nВсе HTML-страницы сгенерированы
+
+== Runtime: Посетитель открывает страницу ==
+
+Visitor -> Browser : Ввести URL /articles/my-article
+Browser -> StaticFiles : GET /articles/my-article/index.html
+StaticFiles --> Browser : 200 OK\nHTML + CSS + JS бандл
+
+Browser -> Browser : Парсинг HTML
+
+group Гидратация клиентских компонентов
+    Browser -> Browser : client:load → монтировать Header\n(NavigationMenu, мобильное меню)
+    Browser -> Browser : client:idle → монтировать HeroContent\n(анимации, визуальные эффекты)
+    Browser -> Browser : client:visible → монтировать Footer\n(при появлении в viewport)
+end
+
+Browser --> Visitor : Страница полностью отрендерена\n(нет дополнительных запросов к API)
+
+note over Browser, StaticFiles
+    Весь контент закодирован в HTML
+    на этапе сборки. Strapi API
+    не опрашивается во время
+    посещения пользователем.
+end note
+
+@enduml
