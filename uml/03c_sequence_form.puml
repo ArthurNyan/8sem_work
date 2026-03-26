@@ -1,0 +1,76 @@
+@startuml sequence_form
+
+title Диаграмма последовательности\nОтправка формы посетителем (планируемый функционал)
+
+skinparam sequenceArrowThickness 2
+skinparam sequenceParticipantBorderThickness 2
+
+actor "Посетитель" as Visitor
+participant "Браузер\n(React-форма)" as Browser
+participant "Strapi REST API\n:1337/api" as API
+database "SQLite DB" as DB
+actor "Контент-менеджер" as CM
+participant "Strapi Admin UI\n:1337/admin" as AdminUI
+
+== Сценарий A: Контактная форма ==
+
+Visitor -> Browser : Открыть страницу\nс контактной формой
+Browser --> Visitor : Отобразить форму\n(имя, email, сообщение)
+
+Visitor -> Browser : Заполнить поля и\nнажать "Отправить"
+Browser -> Browser : Валидация на клиенте\n(обязательные поля, формат email)
+
+alt Валидация не пройдена
+    Browser --> Visitor : Отобразить ошибки\nвалидации
+else Данные корректны
+    Browser -> API : POST /application-forms\n{ name, email, message }
+    API -> DB : INSERT INTO application_forms\n(name, email, message,\ncreatedAt = now())
+    DB --> API : { id, documentId }
+    API --> Browser : 201 Created\n{ data: ApplicationForm }
+    Browser --> Visitor : Показать сообщение\n"Заявка отправлена!\nМы свяжемся с вами."
+end
+
+== Сценарий B: Отклик на вакансию ==
+
+Visitor -> Browser : Открыть страницу вакансии\nи нажать "Откликнуться"
+Browser --> Visitor : Отобразить форму отклика\n(имя, email, телефон, сопроводительное письмо)
+
+Visitor -> Browser : Заполнить форму и\nнажать "Отправить отклик"
+Browser -> Browser : Валидация на клиенте
+
+alt Валидация не пройдена
+    Browser --> Visitor : Отобразить ошибки
+else Данные корректны
+    Browser -> API : POST /vacancy-applications\n{ name, email, phone,\ncoverLetter, vacancy: { id } }
+    API -> DB : INSERT INTO vacancy_applications\n(name, email, phone, coverLetter,\nvacancy_id, createdAt = now())
+    DB --> API : { id, documentId }
+    API --> Browser : 201 Created\n{ data: VacancyApplication }
+    Browser --> Visitor : Показать сообщение\n"Отклик отправлен!"
+end
+
+== Обработка заявок контент-менеджером ==
+
+CM -> AdminUI : Открыть раздел\nContent Manager →\nApplicationForm / VacancyApplication
+AdminUI -> API : GET /application-forms\n?sort=createdAt:desc
+API -> DB : SELECT * FROM application_forms\nORDER BY createdAt DESC
+DB --> API : [ ApplicationForm, ... ]
+API --> AdminUI : 200 OK\n[ { id, name, email, message, createdAt }, ... ]
+AdminUI --> CM : Список входящих заявок
+
+CM -> AdminUI : Просмотреть заявку\nи отметить как обработанную
+AdminUI -> API : PUT /application-forms/:id\n{ processed: true }
+API -> DB : UPDATE application_forms\nSET processed = true\nWHERE id = ?
+DB --> API : Updated
+API --> AdminUI : 200 OK
+AdminUI --> CM : Статус заявки обновлён
+
+note over Browser, API
+    Планируемый функционал:
+    требует перевода фронтенда
+    на SSR-режим (Astro adapter)
+    или использования API Routes
+    в Astro для проксирования
+    запросов к Strapi.
+end note
+
+@enduml

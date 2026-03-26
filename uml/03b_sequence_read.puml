@@ -75,13 +75,33 @@ group Гидратация клиентских компонентов
     Browser -> Browser : client:visible → монтировать Footer\n(при появлении в viewport)
 end
 
-Browser --> Visitor : Страница полностью отрендерена\n(нет дополнительных запросов к API)
+Browser --> Visitor : Страница полностью отрендерена\n(нет дополнительных запросов к API\nдля чтения контента)
 
 note over Browser, StaticFiles
     Весь контент закодирован в HTML
     на этапе сборки. Strapi API
     не опрашивается во время
     посещения пользователем.
+end note
+
+== Runtime: Планируемый функционал — отправка формы ==
+
+Visitor -> Browser : Открыть страницу\nс формой (контакты / вакансия)
+Browser --> Visitor : Гидратированная React-форма\n(client:load)
+
+Visitor -> Browser : Заполнить и отправить форму
+Browser -> API : POST /application-forms\n{ name, email, message }\n(или POST /vacancy-applications)
+API -> DB : INSERT INTO application_forms / vacancy_applications
+DB --> API : 201 Created
+API --> Browser : { data: { id, documentId } }
+Browser --> Visitor : Сообщение об успешной\nотправке заявки
+
+note over Browser, API
+    Этот сценарий требует
+    включения SSR-адаптера
+    в Astro или использования
+    Astro API Routes для
+    проксирования запросов к Strapi.
 end note
 
 @enduml

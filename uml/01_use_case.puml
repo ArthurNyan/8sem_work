@@ -21,6 +21,8 @@ rectangle "Strapi Admin UI" {
     usecase "Загрузка медиафайлов\n(Media Library)" as UC_Media
     usecase "Публикация контента\n(Draft → Published)" as UC_Publish
     usecase "Снятие с публикации\n(Published → Draft)" as UC_Unpublish
+    usecase "Просмотр входящих\nзаявок (ApplicationForm)" as UC_ViewApplications
+    usecase "Обработка отклика\nна вакансию (VacancyApplication)" as UC_ViewVacancyApps
 }
 
 rectangle "Astro Frontend (Сайт)" {
@@ -29,6 +31,8 @@ rectangle "Astro Frontend (Сайт)" {
     usecase "Просмотр\nсписка проектов" as UC_Projects
     usecase "Просмотр\nдетальной страницы проекта" as UC_ProjectDetail
     usecase "Просмотр\nсписка вакансий" as UC_Vacancies
+    usecase "Подать заявку\n(контактная форма)" as UC_ContactForm
+    usecase "Откликнуться на вакансию\n(форма отклика)" as UC_VacancyForm
 }
 
 rectangle "Сборка (Build)" {
@@ -62,9 +66,16 @@ Visitor --> UC_ArticleDetail
 Visitor --> UC_Projects
 Visitor --> UC_ProjectDetail
 Visitor --> UC_Vacancies
+Visitor --> UC_ContactForm
+Visitor --> UC_VacancyForm
 
 UC_Articles ..> UC_ArticleDetail : <<extend>>
 UC_Projects ..> UC_ProjectDetail : <<extend>>
+UC_Vacancies ..> UC_VacancyForm : <<extend>>
+
+' Контент-менеджер обрабатывает входящие заявки
+CM --> UC_ViewApplications
+CM --> UC_ViewVacancyApps
 
 ' Администратор также может управлять контентом
 Admin --> UC_Article
