@@ -8,10 +8,11 @@
     "auth": "node src/auth.js",
     "export": "node src/cli.js",
     "analyze": "node src/analyze.js",
+    "build:results": "node src/build-results.js",
     "md:pdf": "node src/md-to-pdf.js",
     "md:pptx": "node src/md-to-pptx.js",
     "mermaid:render": "node src/render-mermaid.js",
-    "check": "node --check src/auth.js && node --check src/cli.js && node --check src/exporter.js && node --check src/analyze.js && node --check src/md-to-pdf.js && node --check src/md-to-pptx.js && node --check src/render-mermaid.js && node --check src/utils.js"
+    "check": "node --check src/auth.js && node --check src/cli.js && node --check src/exporter.js && node --check src/analyze.js && node --check src/build-results.js && node --check src/md-to-pdf.js && node --check src/md-to-pptx.js && node --check src/render-mermaid.js && node --check src/utils.js"
   },
   "dependencies": {
     "@marp-team/marp-cli": "^4.3.1",

@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { marked } from "marked";
 import { ensureDir, getArgValue, hasFlag, sanitizeFileName } from "./utils.js";
@@ -174,6 +175,25 @@ function buildHtml({ title, content, signature }) {
 </html>`;
 }
 
+export async function convertMarkdownToPdf(inputPath, outputPath, options = {}) {
+  const format = options.format ?? "A4";
+  const signature = options.signature ?? "Выполнил: Нахатакян Артур";
+  const mermaidTheme = options.mermaidTheme ?? "neutral";
+  const browser = await chromium.launch({ headless: true });
+  try {
+    await renderFile(
+      browser,
+      path.resolve(inputPath),
+      path.resolve(outputPath),
+      format,
+      signature,
+      mermaidTheme
+    );
+  } finally {
+    await browser.close();
+  }
+}
+
 async function main() {
   const args = process.argv.slice(2);
 
@@ -192,36 +212,31 @@ async function main() {
     throw new Error("Provide either --input or --dir.");
   }
 
-  const browser = await chromium.launch({ headless: true });
-  try {
-    if (inputArg) {
-      const inputPath = path.resolve(inputArg);
-      const outputPath = path.resolve(
-        getArgValue(args, "--output") ||
-          getArgValue(args, "-o") ||
-          inputPath.replace(/\.md$/i, ".pdf")
-      );
-      await renderFile(browser, inputPath, outputPath, format, signature, mermaidTheme);
-      console.log(`PDF created: ${outputPath}`);
-      return;
-    }
+  if (inputArg) {
+    const inputPath = path.resolve(inputArg);
+    const outputPath = path.resolve(
+      getArgValue(args, "--output") ||
+        getArgValue(args, "-o") ||
+        inputPath.replace(/\.md$/i, ".pdf")
+    );
+    await convertMarkdownToPdf(inputPath, outputPath, { format, signature, mermaidTheme });
+    console.log(`PDF created: ${outputPath}`);
+    return;
+  }
 
-    const sourceDir = path.resolve(dirArg);
-    const outDir = path.resolve(getArgValue(args, "--out-dir", sourceDir));
-    const files = await collectMarkdownFiles(sourceDir);
+  const sourceDir = path.resolve(dirArg);
+  const outDir = path.resolve(getArgValue(args, "--out-dir", sourceDir));
+  const files = await collectMarkdownFiles(sourceDir);
 
-    if (!files.length) {
-      throw new Error(`No markdown files found in ${sourceDir}`);
-    }
+  if (!files.length) {
+    throw new Error(`No markdown files found in ${sourceDir}`);
+  }
 
-    for (const file of files) {
-      const relativePath = path.relative(sourceDir, file);
-      const outputPath = path.join(outDir, relativePath).replace(/\.md$/i, ".pdf");
-      await renderFile(browser, file, outputPath, format, signature, mermaidTheme);
-      console.log(`PDF created: ${outputPath}`);
-    }
-  } finally {
-    await browser.close();
+  for (const file of files) {
+    const relativePath = path.relative(sourceDir, file);
+    const outputPath = path.join(outDir, relativePath).replace(/\.md$/i, ".pdf");
+    await convertMarkdownToPdf(file, outputPath, { format, signature, mermaidTheme });
+    console.log(`PDF created: ${outputPath}`);
   }
 }
 
@@ -368,9 +383,13 @@ async function renderMermaidToSvg({ source, tempRoot, baseName, mermaidTheme }) 
   return fs.readFile(outputFile, "utf8");
 }
 
-main().catch((error) => {
-  console.error("");
-  console.error("Markdown to PDF conversion failed.");
-  console.error(error.message);
-  process.exitCode = 1;
-});
+const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+
+if (isDirectRun) {
+  main().catch((error) => {
+    console.error("");
+    console.error("Markdown to PDF conversion failed.");
+    console.error(error.message);
+    process.exitCode = 1;
+  });
+}

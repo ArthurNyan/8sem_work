@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import PptxGenJS from "pptxgenjs";
 import { ensureDir, getArgValue, hasFlag } from "./utils.js";
 
@@ -209,7 +210,7 @@ async function collectMarkdownFiles(rootDir) {
   return files.sort();
 }
 
-async function convertFile(inputPath, outputPath, signature) {
+export async function convertMarkdownToPptx(inputPath, outputPath, signature = "Выполнил: Нахатакян Артур") {
   const markdown = await fs.readFile(inputPath, "utf8");
   const rawSlides = splitSlides(markdown);
   const slides = rawSlides.length ? rawSlides : [markdown];
@@ -257,7 +258,7 @@ async function main() {
         inputPath.replace(/\.md$/i, ".pptx")
     );
 
-    await convertFile(inputPath, outputPath, signature);
+    await convertMarkdownToPptx(inputPath, outputPath, signature);
     console.log(`PPTX created: ${outputPath}`);
     return;
   }
@@ -279,7 +280,7 @@ async function main() {
 
     const relativePath = path.relative(sourceDir, file);
     const outputPath = path.join(outDir, relativePath).replace(/\.md$/i, ".pptx");
-    await convertFile(file, outputPath, signature);
+    await convertMarkdownToPptx(file, outputPath, signature);
     console.log(`PPTX created: ${outputPath}`);
     converted += 1;
   }
@@ -291,8 +292,11 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(`Error: ${error.message}`);
-  process.exitCode = 1;
-});
+const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 
+if (isDirectRun) {
+  main().catch((error) => {
+    console.error(`Error: ${error.message}`);
+    process.exitCode = 1;
+  });
+}
