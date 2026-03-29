@@ -127,6 +127,46 @@ npm run mermaid:render -- --dir ./student-project --out-dir ./diagrams
 
 По умолчанию он сохраняет `SVG` и повторяет структуру исходных Markdown-файлов.
 
+## Работа с PPTX
+
+Проект поддерживает генерацию презентаций в `PowerPoint (.pptx)` из Markdown.
+
+### Один файл
+
+```bash
+npm run md:pptx -- --input ./student-project/courses/31896-research-project/slides/01-task-1-4-itmo.md
+```
+
+С указанием выходного файла:
+
+```bash
+npm run md:pptx -- \
+  --input ./student-project/courses/31896-research-project/slides/01-task-1-4-itmo.md \
+  --output ./presentations/itmo.pptx
+```
+
+### Вся папка со слайдами
+
+```bash
+npm run md:pptx -- \
+  --dir ./student-project/courses/31896-research-project/slides \
+  --out-dir ./presentations/31896-research-project
+```
+
+Команда:
+
+- рекурсивно ищет `.md`;
+- по умолчанию конвертирует только slide-файлы (frontmatter `marp: true` или с разделителями `---`);
+- создает `.pptx` с той же вложенной структурой;
+- добавляет подпись внизу каждого слайда.
+
+### Полезные параметры
+
+```bash
+npm run md:pptx -- --dir ./slides --out-dir ./presentations --signature "Выполнил: Нахатакян Артур"
+npm run md:pptx -- --dir ./student-project --out-dir ./presentations --all-md
+```
+
 ## Ограничения
 
 - если Moodle запросит логин снова, нужно пересоздать storage state через `npm run auth`
