@@ -9,8 +9,7 @@ skinparam stateArrowThickness 2
 
 state Draft {
     Draft : publishedAt = null
-    Draft : Видна только\nв Strapi Admin UI
-    Draft : Недоступна через\nPublic REST API
+    Draft : Strapi Admin UI
 }
 
 state Published {

@@ -7,11 +7,11 @@ skinparam groupInheritance 2
 
 package "Strapi Backend" {
 
-    enum VacancyFormat {
-        remote
-        hybrid
-        office
-    }
+    ' enum VacancyFormat {
+    '     remote
+    '     hybrid
+    '     office
+    ' }
 
     abstract class StrapiBaseEntity {
         +id: number
@@ -21,10 +21,10 @@ package "Strapi Backend" {
         +publishedAt: Date | null
     }
 
-    abstract class LocalizedEntity {
-        +locale: string
-        +localizations: LocalizedEntity[]
-    }
+    ' abstract class LocalizedEntity {
+    '     +locale: string
+    '     +localizations: LocalizedEntity[]
+    ' }
 
     class Article {
         +name: string
@@ -88,11 +88,11 @@ package "Strapi Backend" {
     StrapiBaseEntity <|-- Global
     StrapiBaseEntity <|-- HomePage
 
-    LocalizedEntity <|-- Article
-    LocalizedEntity <|-- Author
-    LocalizedEntity <|-- Project
-    LocalizedEntity <|-- Global
-    LocalizedEntity <|-- HomePage
+    ' LocalizedEntity <|-- Article
+    ' LocalizedEntity <|-- Author
+    ' LocalizedEntity <|-- Project
+    ' LocalizedEntity <|-- Global
+    ' LocalizedEntity <|-- HomePage
 
     Article "0..*" <--> "0..*" Author : authors / articles\n<<manyToMany>>
     Article "1" --> "1" UploadFile : cover
@@ -100,7 +100,7 @@ package "Strapi Backend" {
     Project "1" --> "0..1" UploadFile : logo
     Global "1" --> "1" UploadFile : logo
 
-    Vacancy --> VacancyFormat : format
+    ' Vacancy --> VacancyFormat : format
 }
 
 package "Astro Frontend" {

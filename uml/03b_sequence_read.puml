@@ -5,7 +5,7 @@ title Диаграмма последовательности\nЧтение ст
 skinparam sequenceArrowThickness 2
 skinparam sequenceParticipantBorderThickness 2
 
-participant "astro build\n(CI / локально)" as Build
+participant "astro сервер" as Build
 participant "Strapi REST API\n:1337/api" as API
 database "SQLite DB" as DB
 collections "Статические файлы\n(dist/)" as StaticFiles
@@ -84,9 +84,9 @@ note over Browser, StaticFiles
     посещения пользователем.
 end note
 
-== Runtime: Планируемый функционал — отправка формы ==
+== Runtime: отправка формы ==
 
-Visitor -> Browser : Открыть страницу\nс формой (контакты / вакансия)
+Visitor -> Browser : Открыть страницу\nс формой
 Browser --> Visitor : Гидратированная React-форма\n(client:load)
 
 Visitor -> Browser : Заполнить и отправить форму

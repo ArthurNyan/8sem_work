@@ -59,6 +59,9 @@ CM --> UC_Unpublish
 
 ' Публикация включает загрузку медиа
 UC_Publish ..> UC_Media : <<include>>
+UC_Article ..> UC_Media : <<include>>
+UC_Project ..> UC_Media : <<include>>
+UC_Vacancy ..> UC_Media : <<include>>
 
 ' Посетитель
 Visitor --> UC_Articles
