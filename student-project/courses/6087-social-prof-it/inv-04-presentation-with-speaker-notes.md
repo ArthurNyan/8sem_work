@@ -23,5 +23,3 @@
 
 - презентация: `slides/isr-04-history-it-presentation.md`
 - текстовая версия: `isr-04-presentation-history-it.md`
-
-
